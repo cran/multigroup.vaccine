@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Using Census Data Functions</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Using Census Data Functions</h1>
+
+
+
+<style type="text/css">
+body {
+max-width: 1100px;
+margin: auto;
+padding: 1em;
+}
+table {
+width: 100%;
+}
+</style>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>This vignette demonstrates how to use the census data functions in
+the <code>multigroup.vaccine</code> package. These functions allow you
+to:</p>
+<ol style="list-style-type: decimal">
+<li>Look up state FIPS codes</li>
+<li>List counties within a state</li>
+<li>Retrieve population data by age groups</li>
+<li>Retrieve city-level population data with flexible age grouping</li>
+<li>Run outbreak models with easily accessible real-world data</li>
+</ol>
+<p>We’ll walk through a complete example using Utah county data.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(multigroup.vaccine)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(socialmixr)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="co"># Get the path to the included census data file</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>census_csv <span class="ot">&lt;-</span> <span class="fu">getCensusDataPath</span>()</span></code></pre></div>
+</div>
+<div id="step-1-getting-state-fips-codes" class="section level2">
+<h2>Step 1: Getting State FIPS Codes</h2>
+<p>The <code>getStateFIPS()</code> function looks up the FIPS code for a
+state by name. FIPS codes are standardized identifiers used by the U.S.
+Census Bureau.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="co"># Get FIPS code for Utah</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>utah_fips <span class="ot">&lt;-</span> <span class="fu">getStateFIPS</span>(<span class="st">&quot;Utah&quot;</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Utah FIPS code:&quot;</span>, utah_fips, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co">#&gt; Utah FIPS code: 49</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co"># You can also try other states</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>california_fips <span class="ot">&lt;-</span> <span class="fu">getStateFIPS</span>(<span class="st">&quot;California&quot;</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;California FIPS code:&quot;</span>, california_fips, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt; California FIPS code: 06</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>texas_fips <span class="ot">&lt;-</span> <span class="fu">getStateFIPS</span>(<span class="st">&quot;Texas&quot;</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Texas FIPS code:&quot;</span>, texas_fips, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt; Texas FIPS code: 48</span></span></code></pre></div>
+</div>
+<div id="step-2-listing-counties" class="section level2">
+<h2>Step 2: Listing Counties</h2>
+<p>The <code>listCounties()</code> function returns all counties in a
+state. This is useful for exploring available data.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># List all counties in Utah</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>utah_counties <span class="ot">&lt;-</span> <span class="fu">listCounties</span>(</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">state_fips =</span> utah_fips,</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="at">csv_path =</span> census_csv</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>)</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Counties in Utah:</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt; Counties in Utah:</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="fu">print</span>(utah_counties)</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt;  [1] &quot;Beaver County&quot;     &quot;Box Elder County&quot;  &quot;Cache County&quot;     </span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt;  [4] &quot;Carbon County&quot;     &quot;Daggett County&quot;    &quot;Davis County&quot;     </span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt;  [7] &quot;Duchesne County&quot;   &quot;Emery County&quot;      &quot;Garfield County&quot;  </span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; [10] &quot;Grand County&quot;      &quot;Iron County&quot;       &quot;Juab County&quot;      </span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; [13] &quot;Kane County&quot;       &quot;Millard County&quot;    &quot;Morgan County&quot;    </span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; [16] &quot;Piute County&quot;      &quot;Rich County&quot;       &quot;Salt Lake County&quot; </span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; [19] &quot;San Juan County&quot;   &quot;Sanpete County&quot;    &quot;Sevier County&quot;    </span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; [22] &quot;Summit County&quot;     &quot;Tooele County&quot;     &quot;Uintah County&quot;    </span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; [25] &quot;Utah County&quot;       &quot;Wasatch County&quot;    &quot;Washington County&quot;</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt; [28] &quot;Wayne County&quot;      &quot;Weber County&quot;</span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">Total number of counties:&quot;</span>, <span class="fu">length</span>(utah_counties), <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt; Total number of counties: 29</span></span></code></pre></div>
+</div>
+<div id="step-3-retrieving-population-data" class="section level2">
+<h2>Step 3: Retrieving Population Data</h2>
+<p>The <code>getCensusData()</code> function retrieves population data
+for a specific county, organized by age groups.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Define age groups for analysis</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="co"># These represent: 0-4, 5-11, 12-17, 18-24, 25-44, 45-64, 65+</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>age_limits <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">5</span>, <span class="dv">12</span>, <span class="dv">18</span>, <span class="dv">25</span>, <span class="dv">45</span>, <span class="dv">65</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co"># Get data for Washington County, Utah</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>washington_data <span class="ot">&lt;-</span> <span class="fu">getCensusData</span>(</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>  <span class="at">state_fips =</span> utah_fips,</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  <span class="at">county_name =</span> <span class="st">&quot;Washington County&quot;</span>,</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>  <span class="at">year =</span> <span class="dv">2024</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>  <span class="at">age_groups =</span> age_limits,</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a>  <span class="at">csv_path =</span> census_csv</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a>)</span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co"># Display the results</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;County:&quot;</span>, washington_data<span class="sc">$</span>county, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt; County: Washington County</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Year:&quot;</span>, washington_data<span class="sc">$</span>year, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt; Year: 2024</span></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Total population:&quot;</span>, <span class="fu">format</span>(washington_data<span class="sc">$</span>total_pop, <span class="at">big.mark =</span> <span class="st">&quot;,&quot;</span>), <span class="st">&quot;</span><span class="sc">\n\n</span><span class="st">&quot;</span>)</span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co">#&gt; Total population: 207,943</span></span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a></span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Age distribution:</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a><span class="co">#&gt; Age distribution:</span></span>
+<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(washington_data<span class="sc">$</span>age_labels)) {</span>
+<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a>  pct <span class="ot">&lt;-</span> <span class="dv">100</span> <span class="sc">*</span> washington_data<span class="sc">$</span>age_pops[i] <span class="sc">/</span> washington_data<span class="sc">$</span>total_pop</span>
+<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;  %s: %s (%.1f%%)</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
+<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a>              washington_data<span class="sc">$</span>age_labels[i],</span>
+<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a>              <span class="fu">format</span>(washington_data<span class="sc">$</span>age_pops[i], <span class="at">big.mark =</span> <span class="st">&quot;,&quot;</span>),</span>
+<span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a>              pct))</span>
+<span id="cb4-30"><a href="#cb4-30" tabindex="-1"></a>}</span>
+<span id="cb4-31"><a href="#cb4-31" tabindex="-1"></a><span class="co">#&gt;   0to4: 11,950 (5.7%)</span></span>
+<span id="cb4-32"><a href="#cb4-32" tabindex="-1"></a><span class="co">#&gt;   5to11: 18,808 (9.0%)</span></span>
+<span id="cb4-33"><a href="#cb4-33" tabindex="-1"></a><span class="co">#&gt;   12to17: 18,446 (8.9%)</span></span>
+<span id="cb4-34"><a href="#cb4-34" tabindex="-1"></a><span class="co">#&gt;   18to24: 19,948 (9.6%)</span></span>
+<span id="cb4-35"><a href="#cb4-35" tabindex="-1"></a><span class="co">#&gt;   25to44: 49,399 (23.8%)</span></span>
+<span id="cb4-36"><a href="#cb4-36" tabindex="-1"></a><span class="co">#&gt;   45to64: 42,661 (20.5%)</span></span>
+<span id="cb4-37"><a href="#cb4-37" tabindex="-1"></a><span class="co">#&gt;   65plus: 46,731 (22.5%)</span></span></code></pre></div>
+</div>
+<div id="step-4-visualizing-age-distribution" class="section level2">
+<h2>Step 4: Visualizing Age Distribution</h2>
+<p>Let’s visualize the age distribution to better understand the
+population structure.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Create a bar plot of age distribution</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>age_percentages <span class="ot">&lt;-</span> <span class="dv">100</span> <span class="sc">*</span> washington_data<span class="sc">$</span>age_pops <span class="sc">/</span> washington_data<span class="sc">$</span>total_pop</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="fu">barplot</span>(age_percentages,</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>        <span class="at">names.arg =</span> washington_data<span class="sc">$</span>age_labels,</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>        <span class="at">main =</span> <span class="fu">paste</span>(<span class="st">&quot;Age Distribution -&quot;</span>, washington_data<span class="sc">$</span>county),</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>        <span class="at">xlab =</span> <span class="st">&quot;Age Group&quot;</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>        <span class="at">ylab =</span> <span class="st">&quot;Percentage of Population&quot;</span>,</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>        <span class="at">col =</span> <span class="st">&quot;steelblue&quot;</span>,</span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>        <span class="at">las =</span> <span class="dv">2</span>,</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>        <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fu">max</span>(age_percentages) <span class="sc">*</span> <span class="fl">1.1</span>))</span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co"># Add percentage labels on top of bars</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="fu">text</span>(<span class="at">x =</span> <span class="fu">seq_along</span>(age_percentages) <span class="sc">*</span> <span class="fl">1.2</span> <span class="sc">-</span> <span class="fl">0.5</span>,</span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>     <span class="at">y =</span> age_percentages <span class="sc">+</span> <span class="dv">1</span>,</span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a>     <span class="at">labels =</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.1f%%&quot;</span>, age_percentages),</span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a>     <span class="at">pos =</span> <span class="dv">3</span>,</span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a>     <span class="at">cex =</span> <span class="fl">0.8</span>)</span></code></pre></div>
+<p><img role="img" aria-label="Bar chart showing age distribution percentages for Washington County, Utah. Each bar represents an age group with percentage of total population labeled above." src="data:image/png;base64,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" alt="Bar chart showing age distribution percentages for Washington County, Utah. Each bar represents an age group with percentage of total population labeled above." /></p>
+</div>
+<div id="step-5-comparing-multiple-counties" class="section level2">
+<h2>Step 5: Comparing Multiple Counties</h2>
+<p>Let’s compare the age distributions of three different Utah
+counties.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># Get data for three counties</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>counties_to_compare <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Salt Lake County&quot;</span>, <span class="st">&quot;Utah County&quot;</span>, <span class="st">&quot;Washington County&quot;</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>county_data_list <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="cf">for</span> (county <span class="cf">in</span> counties_to_compare) {</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>  county_data_list[[county]] <span class="ot">&lt;-</span> <span class="fu">getCensusData</span>(</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a>    <span class="at">state_fips =</span> utah_fips,</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>    <span class="at">county_name =</span> county,</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>    <span class="at">year =</span> <span class="dv">2024</span>,</span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>    <span class="at">age_groups =</span> age_limits,</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>    <span class="at">csv_path =</span> census_csv</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>  )</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>}</span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co"># Create comparison matrix</span></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a>comparison_matrix <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, <span class="at">nrow =</span> <span class="fu">length</span>(counties_to_compare), </span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a>                            <span class="at">ncol =</span> <span class="fu">length</span>(age_limits))</span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="fu">colnames</span>(comparison_matrix) <span class="ot">&lt;-</span> washington_data<span class="sc">$</span>age_labels</span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="fu">rownames</span>(comparison_matrix) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Salt Lake&quot;</span>, <span class="st">&quot;Utah&quot;</span>, <span class="st">&quot;Washington&quot;</span>)</span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a></span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(counties_to_compare)) {</span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a>  county_name <span class="ot">&lt;-</span> counties_to_compare[i]</span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a>  data <span class="ot">&lt;-</span> county_data_list[[county_name]]</span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a>  comparison_matrix[i, ] <span class="ot">&lt;-</span> <span class="dv">100</span> <span class="sc">*</span> data<span class="sc">$</span>age_pops <span class="sc">/</span> data<span class="sc">$</span>total_pop</span>
+<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a>}</span>
+<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a></span>
+<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a><span class="co"># Plot comparison</span></span>
+<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a><span class="fu">barplot</span>(comparison_matrix,</span>
+<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a>        <span class="at">beside =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a>        <span class="at">main =</span> <span class="st">&quot;Age Distribution Comparison Across Utah Counties&quot;</span>,</span>
+<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a>        <span class="at">xlab =</span> <span class="st">&quot;Age Group&quot;</span>,</span>
+<span id="cb6-32"><a href="#cb6-32" tabindex="-1"></a>        <span class="at">ylab =</span> <span class="st">&quot;Percentage of Population&quot;</span>,</span>
+<span id="cb6-33"><a href="#cb6-33" tabindex="-1"></a>        <span class="at">col =</span> <span class="fu">c</span>(<span class="st">&quot;coral&quot;</span>, <span class="st">&quot;steelblue&quot;</span>, <span class="st">&quot;lightgreen&quot;</span>),</span>
+<span id="cb6-34"><a href="#cb6-34" tabindex="-1"></a>        <span class="at">legend.text =</span> <span class="fu">rownames</span>(comparison_matrix),</span>
+<span id="cb6-35"><a href="#cb6-35" tabindex="-1"></a>        <span class="at">args.legend =</span> <span class="fu">list</span>(<span class="at">x =</span> <span class="st">&quot;topright&quot;</span>, <span class="at">bty =</span> <span class="st">&quot;n&quot;</span>),</span>
+<span id="cb6-36"><a href="#cb6-36" tabindex="-1"></a>        <span class="at">las =</span> <span class="dv">2</span>)</span></code></pre></div>
+<p><img role="img" aria-label="Side-by-side bar chart comparing age distribution percentages across Salt Lake County (coral), Utah County (steel blue), and Washington County (light green). Each age group shows three bars representing the three counties." src="data:image/png;base64,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" alt="Side-by-side bar chart comparing age distribution percentages across Salt Lake County (coral), Utah County (steel blue), and Washington County (light green). Each age group shows three bars representing the three counties." /></p>
+</div>
+<div id="step-6-using-city-level-data-getcitydata" class="section level2">
+<h2>Step 6: Using City-Level Data (getCityData)</h2>
+<p>In addition to census data, the package includes functions to work
+with city-level population data from ACS (American Community Survey)
+estimates. Let’s demonstrate using Hildale, UT as an example.</p>
+<div id="example-1-default-5-year-age-groups" class="section level3">
+<h3>Example 1: Default 5-year Age Groups</h3>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Get path to Hildale data</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>hildale_path <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;hildale_ut_2023.csv&quot;</span>, <span class="at">package =</span> <span class="st">&quot;multigroup.vaccine&quot;</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co"># Load with default 5-year age groups (0-4, 5-9, 10-14, ...)</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>hildale_5yr <span class="ot">&lt;-</span> <span class="fu">getCityData</span>(</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a>  <span class="at">city_name =</span> <span class="st">&quot;Hildale city, Utah&quot;</span>,</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a>  <span class="at">csv_path =</span> hildale_path</span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a>)</span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Hildale, UT - 5-year Age Groups</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt; Hildale, UT - 5-year Age Groups</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;================================</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt; ================================</span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Total population:&quot;</span>, <span class="fu">format</span>(hildale_5yr<span class="sc">$</span>total_pop, <span class="at">big.mark =</span> <span class="st">&quot;,&quot;</span>), <span class="st">&quot;</span><span class="sc">\n\n</span><span class="st">&quot;</span>)</span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt; Total population: 1,301</span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Age distribution:</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="co">#&gt; Age distribution:</span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(hildale_5yr<span class="sc">$</span>age_labels)) {</span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>  pct <span class="ot">&lt;-</span> <span class="dv">100</span> <span class="sc">*</span> hildale_5yr<span class="sc">$</span>age_pops[i] <span class="sc">/</span> hildale_5yr<span class="sc">$</span>total_pop</span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;  %s: %s (%.1f%%)</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a>              hildale_5yr<span class="sc">$</span>age_labels[i],</span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a>              <span class="fu">format</span>(hildale_5yr<span class="sc">$</span>age_pops[i], <span class="at">big.mark =</span> <span class="st">&quot;,&quot;</span>),</span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a>              pct))</span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a>}</span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt;   0to4: 57 (4.4%)</span></span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt;   5to9: 110 (8.5%)</span></span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co">#&gt;   10to14: 181 (13.9%)</span></span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="co">#&gt;   15to19: 157 (12.1%)</span></span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="co">#&gt;   20to24: 134 (10.3%)</span></span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="co">#&gt;   25to29: 128 (9.8%)</span></span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a><span class="co">#&gt;   30to34: 55 (4.2%)</span></span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a><span class="co">#&gt;   35to39: 110 (8.5%)</span></span>
+<span id="cb7-34"><a href="#cb7-34" tabindex="-1"></a><span class="co">#&gt;   40to44: 59 (4.5%)</span></span>
+<span id="cb7-35"><a href="#cb7-35" tabindex="-1"></a><span class="co">#&gt;   45to49: 105 (8.1%)</span></span>
+<span id="cb7-36"><a href="#cb7-36" tabindex="-1"></a><span class="co">#&gt;   50to54: 64 (4.9%)</span></span>
+<span id="cb7-37"><a href="#cb7-37" tabindex="-1"></a><span class="co">#&gt;   55to59: 32 (2.5%)</span></span>
+<span id="cb7-38"><a href="#cb7-38" tabindex="-1"></a><span class="co">#&gt;   60to64: 29 (2.2%)</span></span>
+<span id="cb7-39"><a href="#cb7-39" tabindex="-1"></a><span class="co">#&gt;   65to69: 35 (2.7%)</span></span>
+<span id="cb7-40"><a href="#cb7-40" tabindex="-1"></a><span class="co">#&gt;   70to74: 0 (0.0%)</span></span>
+<span id="cb7-41"><a href="#cb7-41" tabindex="-1"></a><span class="co">#&gt;   75to79: 27 (2.1%)</span></span>
+<span id="cb7-42"><a href="#cb7-42" tabindex="-1"></a><span class="co">#&gt;   80to84: 18 (1.4%)</span></span>
+<span id="cb7-43"><a href="#cb7-43" tabindex="-1"></a><span class="co">#&gt;   85plus: 0 (0.0%)</span></span></code></pre></div>
+</div>
+<div id="example-2-custom-age-groups-for-school-based-analysis" class="section level3">
+<h3>Example 2: Custom Age Groups for School-Based Analysis</h3>
+<p>Now let’s use custom age groups that align with school levels:
+pre-school (0-4), elementary (5-11), middle school (12-13), high school
+(14-17), and adult groups.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="co"># Define school-aligned age groups</span></span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>school_age_groups <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">5</span>, <span class="dv">12</span>, <span class="dv">14</span>, <span class="dv">18</span>, <span class="dv">25</span>, <span class="dv">45</span>, <span class="dv">65</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>hildale_school <span class="ot">&lt;-</span> <span class="fu">getCityData</span>(</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>  <span class="at">city_name =</span> <span class="st">&quot;Hildale city, Utah&quot;</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  <span class="at">csv_path =</span> hildale_path,</span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>  <span class="at">age_groups =</span> school_age_groups</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>)</span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;</span><span class="sc">\n</span><span class="st">Hildale, UT - School-Aligned Age Groups</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="co">#&gt; Hildale, UT - School-Aligned Age Groups</span></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;========================================</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a><span class="co">#&gt; ========================================</span></span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Total population:&quot;</span>, <span class="fu">format</span>(hildale_school<span class="sc">$</span>total_pop, <span class="at">big.mark =</span> <span class="st">&quot;,&quot;</span>), <span class="st">&quot;</span><span class="sc">\n\n</span><span class="st">&quot;</span>)</span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a><span class="co">#&gt; Total population: 1,301</span></span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a></span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">&quot;Age distribution:</span><span class="sc">\n</span><span class="st">&quot;</span>)</span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a><span class="co">#&gt; Age distribution:</span></span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(hildale_school<span class="sc">$</span>age_labels)) {</span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a>  pct <span class="ot">&lt;-</span> <span class="dv">100</span> <span class="sc">*</span> hildale_school<span class="sc">$</span>age_pops[i] <span class="sc">/</span> hildale_school<span class="sc">$</span>total_pop</span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">&quot;  %s: %s (%.1f%%)</span><span class="sc">\n</span><span class="st">&quot;</span>,</span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a>              hildale_school<span class="sc">$</span>age_labels[i],</span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a>              <span class="fu">format</span>(hildale_school<span class="sc">$</span>age_pops[i], <span class="at">big.mark =</span> <span class="st">&quot;,&quot;</span>),</span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a>              pct))</span>
+<span id="cb8-26"><a href="#cb8-26" tabindex="-1"></a>}</span>
+<span id="cb8-27"><a href="#cb8-27" tabindex="-1"></a><span class="co">#&gt;   0to4: 57 (4.4%)</span></span>
+<span id="cb8-28"><a href="#cb8-28" tabindex="-1"></a><span class="co">#&gt;   5to11: 182.4 (14.0%)</span></span>
+<span id="cb8-29"><a href="#cb8-29" tabindex="-1"></a><span class="co">#&gt;   12to13: 72.4 (5.6%)</span></span>
+<span id="cb8-30"><a href="#cb8-30" tabindex="-1"></a><span class="co">#&gt;   14to17: 130.4 (10.0%)</span></span>
+<span id="cb8-31"><a href="#cb8-31" tabindex="-1"></a><span class="co">#&gt;   18to24: 196.8 (15.1%)</span></span>
+<span id="cb8-32"><a href="#cb8-32" tabindex="-1"></a><span class="co">#&gt;   25to44: 352 (27.1%)</span></span>
+<span id="cb8-33"><a href="#cb8-33" tabindex="-1"></a><span class="co">#&gt;   45to64: 230 (17.7%)</span></span>
+<span id="cb8-34"><a href="#cb8-34" tabindex="-1"></a><span class="co">#&gt;   65plus: 80 (6.1%)</span></span></code></pre></div>
+</div>
+<div id="visualizing-the-comparison" class="section level3">
+<h3>Visualizing the Comparison</h3>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># Create a comparison visualization</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>oldpar <span class="ot">&lt;-</span> <span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="at">mar =</span> <span class="fu">c</span>(<span class="dv">5</span>, <span class="dv">4</span>, <span class="dv">4</span>, <span class="dv">2</span>))</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co"># Plot 5-year groups</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>age_pct_5yr <span class="ot">&lt;-</span> <span class="dv">100</span> <span class="sc">*</span> hildale_5yr<span class="sc">$</span>age_pops <span class="sc">/</span> hildale_5yr<span class="sc">$</span>total_pop</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="fu">barplot</span>(age_pct_5yr,</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a>        <span class="at">names.arg =</span> hildale_5yr<span class="sc">$</span>age_labels,</span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>        <span class="at">main =</span> <span class="st">&quot;5-Year Age Groups&quot;</span>,</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a>        <span class="at">xlab =</span> <span class="st">&quot;Age Group&quot;</span>,</span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a>        <span class="at">ylab =</span> <span class="st">&quot;% of Population&quot;</span>,</span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>        <span class="at">col =</span> <span class="st">&quot;steelblue&quot;</span>,</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a>        <span class="at">las =</span> <span class="dv">2</span>,</span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a>        <span class="at">cex.names =</span> <span class="fl">0.7</span>,</span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>        <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fu">max</span>(age_pct_5yr) <span class="sc">*</span> <span class="fl">1.2</span>))</span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a><span class="co"># Plot school-aligned groups</span></span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a>age_pct_school <span class="ot">&lt;-</span> <span class="dv">100</span> <span class="sc">*</span> hildale_school<span class="sc">$</span>age_pops <span class="sc">/</span> hildale_school<span class="sc">$</span>total_pop</span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a><span class="fu">barplot</span>(age_pct_school,</span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a>        <span class="at">names.arg =</span> hildale_school<span class="sc">$</span>age_labels,</span>
+<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a>        <span class="at">main =</span> <span class="st">&quot;School-Aligned Age Groups&quot;</span>,</span>
+<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a>        <span class="at">xlab =</span> <span class="st">&quot;Age Group&quot;</span>,</span>
+<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a>        <span class="at">ylab =</span> <span class="st">&quot;% of Population&quot;</span>,</span>
+<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a>        <span class="at">col =</span> <span class="st">&quot;coral&quot;</span>,</span>
+<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a>        <span class="at">las =</span> <span class="dv">2</span>,</span>
+<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a>        <span class="at">cex.names =</span> <span class="fl">0.7</span>,</span>
+<span id="cb9-26"><a href="#cb9-26" tabindex="-1"></a>        <span class="at">ylim =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fu">max</span>(age_pct_school) <span class="sc">*</span> <span class="fl">1.2</span>))</span></code></pre></div>
+<p><img role="img" aria-label="Two side-by-side bar charts comparing age grouping methods for Hildale, UT. Left panel shows 5-year age groups in steel blue. Right panel shows school-aligned age groups in coral. Both display percentage of population on y-axis." src="data:image/png;base64,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" alt="Two side-by-side bar charts comparing age grouping methods for Hildale, UT. Left panel shows 5-year age groups in steel blue. Right panel shows school-aligned age groups in coral. Both display percentage of population on y-axis." /></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="fu">par</span>(oldpar)</span></code></pre></div>
+<p>This demonstrates how <code>getCityData()</code> provides flexibility
+in age grouping. The 5-year groups follow standard ACS categories, while
+custom groups can be defined to match specific analysis needs (e.g.,
+school grades, epidemiological contact patterns).</p>
+</div>
+</div>
+<div id="summary" class="section level2">
+<h2>Summary</h2>
+<p>This vignette demonstrated the key population data functions in the
+<code>multigroup.vaccine</code> package:</p>
+<ol style="list-style-type: decimal">
+<li><strong><code>getStateFIPS()</code></strong>: Look up state FIPS
+codes</li>
+<li><strong><code>listCounties()</code></strong>: List all counties in a
+state</li>
+<li><strong><code>getCensusData()</code></strong>: Retrieve county-level
+population data by age groups from U.S. Census</li>
+<li><strong><code>getCityData()</code></strong>: Retrieve city-level
+population data from ACS with flexible age grouping</li>
+</ol>
+<p>These functions make it easy to work with real population data from
+both census (county-level) and ACS (city-level) sources. The flexible
+age grouping options allow you to structure data according to your
+specific analysis needs, whether for epidemic modeling, demographic
+analysis, or other applications. You can apply these same techniques to
+any state and county in the United States.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

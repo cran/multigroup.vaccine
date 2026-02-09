@@ -1,0 +1,101 @@
+---
+title: "Measles Age-Structured Model"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Measles Age-Structured Model}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(multigroup.vaccine)
+library(socialmixr)
+```
+
+This vignette demonstrates how to build and run an age-structured model of transmission within a U.S. county. The example is an outbreak of measles in Washington County, Utah.
+
+WARNING: The data and model used in this vignette are for demonstration purposes only and do not reflect real-world conditions accurately. The results are not intended to forecast or predict a measles outbreak size in this location.
+
+First we define the age groups that we want use in our model. Here we choose groupings for which we might have reason to assume different levels of immunization against measles. We define the `age_limits` vector using the lower limit (minimum age) of each group, starting with 0:
+
+```{r}
+# under 1, 1-4, 5-11, 12-17, 18-24, 25-44, 45-69, 70 plus
+age_limits <- c(0, 1, 5, 12, 18, 25, 45, 70)
+```
+
+Next we collect census data from Washington County, Utah, using our custom age group choice:
+
+```{r}
+# Get data for Washington County, Utah
+washington_data <- getCensusData(
+  state_fips = getStateFIPS("Utah"),
+  county_name = "Washington County",
+  year = 2024,
+  age_groups = age_limits,
+  csv_path = getCensusDataPath()
+)
+```
+
+Now we specify immunity levels of our population age groups due to vaccination. The first age group (under 1 year) has no immunity because the first measles vaccine is not given until age one. Then we assume rising immunity with age. 
+
+NOTE: These vaccination and immunization assumptions are not validated by data and should not be taken as the actual levels of immunization against measles in Washington County.
+
+```{r}
+age_immunity <- c(0, 0.77, 0.83, 0.85, 0.87, 0.90, 0.92, 1)
+```
+
+Now we can begin defining the input arguments to our `finalsize` function so that we can estimate the measles outbreak size in this county after an introduction.
+
+Initial population size of each state:
+
+```{r}
+popsize <- washington_data$age_pops
+
+initV <- round(age_immunity * popsize)  # initially immune cases 
+
+initI <- rep(0, length(popsize))  # initial infectious cases
+initI[6] <- 1                     # assume 1 initial case in the 6th age group (25-44)
+
+initR <- rep(0, length(popsize))  # no recent prior measles outbreaks
+```
+
+Transmission matrix ingredients: contact matrix, relative susceptibility and transmissibility, and the basic reproduction number ($R_0$). The contact matrix uses Polymod contact survey data, adjusted for local population distribution:
+
+```{r}
+contactmatrix <- contactMatrixPolymod(age_limits, popsize)
+relsusc <- rep(1, length(popsize))      # Assume no age differences in susceptibility
+reltransm <- rep(1, length(popsize))    # or transmissibility per contact
+R0 <- 10
+```
+
+Now we can estimate the final size of an outbreak using the default, deterministic solution
+produced by the `finalsize()` function:
+
+```{r}
+fs <- finalsize(popsize, R0, contactmatrix, relsusc, reltransm, initR, initI, initV)
+round(sum(fs))
+```
+Under the model assumptions and with $R_0$ = 10, there could be an outbreak of more than 7,500 measles cases in this county.
+
+Here's how the outbreak size looks for each age group:
+```{r}
+names(fs) <- washington_data$age_labels
+round(fs)
+```
+Here's an example using the "hybrid" method option in the `finalsize()` function, which runs stochastic simulations from the initial conditions until the outbreak dies out or reaches an "escape" threshold, after which the stochastic simulation is suspended and replaced with the deterministic solution above.
+
+```{r}
+fs_hybrid <- finalsize(popsize, R0, contactmatrix, relsusc, reltransm, initR, initI, initV, method = "hybrid", nsims = 30)
+colnames(fs_hybrid) <- washington_data$age_labels
+fs_hybrid
+```
+The results show that not every introduction of one infectious individual (in the 25 to 44 age group) will lead to a large outbreak.
+
+NOTE: All above results should be taken with caution, as this simulation is a simplification of reality that does not consider, for example, individuals’ changing behavior, e.g. dramatically reducing contact rates or taking other precautionary actions upon observing a measles outbreak occurring in the community. The model also makes the highly unrealistic assumption of spatially uniform mixing across a large county with geographically dispersed communities, which could make the results unreliable.
